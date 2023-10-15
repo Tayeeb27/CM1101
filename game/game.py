@@ -1,10 +1,8 @@
 #!/usr/bin/python3
 
 from map import rooms
+from map import room_office
 import string
-from map import rooms
-import string
-import re
 
 
 def remove_punct(text):
@@ -20,9 +18,14 @@ def remove_punct(text):
     >>> remove_punct(",go!So.?uTh")
     'goSouTh'
     """
-    return "".join(u for u in text if u not in ("?", ".", ";", ":", "!", ",", "-"))
-
-
+    """Strips punctuation from list of words"""
+    
+    # define punctuation
+    text = "".join(c for c in text if c not in ("!",".",":","?",",","-",))
+    return(text)                         
+    
+    
+    
 def remove_spaces(text):
     """This function is used to remove leading and trailing spaces from a string.
     It takes a string and returns a new string with does not have leading and
@@ -39,8 +42,9 @@ def remove_spaces(text):
     >>> remove_spaces("   ")
     ''
     """
-    return text.strip()
-
+   
+    text = text.strip()
+    return(text)
 
 def normalise_input(user_input):
     """This function removes all punctuation, leading and trailing
@@ -54,13 +58,11 @@ def normalise_input(user_input):
     >>> normalise_input("HELP!!!!!!!")
     'help'
     """
-    punc_clean = remove_punct(user_input).lower()
-    spaces_clean = remove_spaces(punc_clean)
-    return spaces_clean
-
-
-current_room = "Office"
-
+    user_input = remove_punct(user_input)
+    user_input = remove_spaces(user_input)
+    user_input = user_input.lower()
+    return(user_input)
+    
 
 def display_room(room):
     """This function takes a room as an input and nicely displays its name
@@ -78,31 +80,33 @@ def display_room(room):
     in their eyes. If you go west you can return to the
     Queen's Buildings.
     <BLANKLINE>
+    
 
     Note: <BLANKLINE> here means that doctest should expect a blank line.
     """
     print()
-    print(room["name"].upper())
+    print(str(room["name"]).upper())
     print()
     print(room["description"])
-    print()
+    print() 
 
-
-
+    
 def exit_leads_to(exits, direction):
     """This function takes a dictionary of exits and a direction (a particular
     exit taken from this dictionary). It returns the name of the room into which
     this exit leads. For example:
 
     >>> exit_leads_to(rooms["Reception"]["exits"], "south")
-    "MJ and Simon's room"
+    'Admins'
     >>> exit_leads_to(rooms["Reception"]["exits"], "east")
-    "your personal tutor's office"
+    'Tutor'
     >>> exit_leads_to(rooms["Tutor"]["exits"], "west")
     'Reception'
     """
+    #for rooms in map:
+        #print (rooms["exits"])
     return rooms[exits[direction]]["name"]
-
+    
 
 def print_menu_line(direction, leads_to):
     """This function prints a line of a menu of exits. It takes two strings: a
@@ -117,8 +121,8 @@ def print_menu_line(direction, leads_to):
     >>> print_menu_line("south", "MJ and Simon's room")
     Go SOUTH to MJ and Simon's room.
     """
-    print("Go " + direction.upper() + " to " + leads_to + ".")
-
+    direction = direction.upper()
+    print ("Go " + direction + " to " + leads_to + ".")
 
 
 def print_menu(exits):
@@ -136,15 +140,15 @@ def print_menu(exits):
     Go SOUTH to MJ and Simon's room.
     Where do you want to go?
     """
+    
     print("You can:")
-
+    
     for direction in exits:
-        print_exits(direction, exits_leads_to(exits, direction))
-    # COMPLETE THIS PART:
-    # Iterate over available exits:
-    #     and for each exit print the appropriate menu line
+        print_menu_line(direction, exit_leads_to(exits, direction))
 
     print("Where do you want to go?")
+
+      
 
 
 def is_valid_exit(exits, user_input):
@@ -163,8 +167,12 @@ def is_valid_exit(exits, user_input):
     >>> is_valid_exit(rooms["Parking"]["exits"], "east")
     True
     """
-    return user_input in exits
-
+    if user_input in exits:
+        return True
+        
+    else:
+        return False
+        
 
 def menu(exits):
     """This function, given a dictionary of possible exits from a room, prints the
@@ -176,20 +184,25 @@ def menu(exits):
     of the chosen exit. Otherwise the menu is displayed again and the player
     prompted, repeatedly, until a correct choice is entered."""
 
-    # Repeat until the player enter a valid choice
-    while True:
-        pass
-        # COMPLETE THIS PART:
-
-        # Display menu
+    # Repeats until the player enter a valid choice
+    in_menu = True
+    # Allows the start of a while loop until a certain condition is met
+    while in_menu == True:
+        
         print_menu(exits)
+        
+        user_input = input('')
+        user_input = normalise_input(user_input)
+        
+        
+        if is_valid_exit(exits, user_input) == True:
+            in_menu = False
+            return user_input
 
-        # Read player's input
-        player_input = str(input("where do you want to go)"))
-        # Normalise the input
+    #The while loop takes a user input, then using the normalise_input function and the is_valid_exit functions checks to see if the input is valid.
+    # If the user does not enter a correct input, the while loop allows the program to keep asking.    
 
-        # Check if the input makes sense (is valid exit)
-        # If so, return the player's choice
+
 
 
 def move(exits, direction):
@@ -230,5 +243,7 @@ def main():
 # Are we being run as a script? If so, run main().
 # '__main__' is the name of the scope in which top-level code executes.
 # See https://docs.python.org/3.4/library/__main__.html for explanation
+
+
 if __name__ == "__main__":
     main()
