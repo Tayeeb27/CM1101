@@ -2,7 +2,7 @@
 from map import rooms
 from items import *
 from player import *
-
+from gameparser import *
 
 def list_of_items(items):
     """This function takes a list of items (see items.py for the definition) and
@@ -21,12 +21,14 @@ def list_of_items(items):
     'money, a student handbook, laptop'
 
     """
-    ls = []
-    for items in items:
-        ls.append(items["name"])
+    items_str = ""
 
-    return ", ".join(ls)
+    for i in range(len(items)):
+        items_str += items[i]["name"]
+        if i != (len(items) - 1):
+            items_str += ", "
 
+    return items_str
 
 def print_room_items(room):
     """This function takes a room as an input and nicely displays a list of items
@@ -51,10 +53,7 @@ def print_room_items(room):
 
     """
     if len(list_of_items(room["items"])) != 0:
-        print("There is {} here.\n" .format(list_of_items(room["items"])))
-    else:
-        pass
-
+        print("There is " + list_of_items(room["items"]) + " here.\n")
 
 
 def print_inventory_items(items):
@@ -67,8 +66,8 @@ def print_inventory_items(items):
     <BLANKLINE>
 
     """
-    print("You have " + list_of_items(items) + ".")
-    print()
+    if len(items) != 0:
+        print("You have " + list_of_items(items) + ".\n")
 
 
 def print_room(room):
@@ -118,16 +117,14 @@ def print_room(room):
     Note: <BLANKLINE> here means that doctest should expect a blank line.
     """
     # Display room name
-    print()
-    print(room["name"].upper())
-    print()
+    print('\n' + room["name"].upper() + '\n')
+    
     # Display room description
-    print(room["description"])
-    print()
+    print(room["description"] + '\n')
+    
+    # Display items in room
     print_room_items(room)
-    #
-    # COMPLETE ME!
-    #
+
 
 def exit_leads_to(exits, direction):
     """This function takes a dictionary of exits and a direction (a particular
@@ -196,9 +193,10 @@ def print_menu(exits, room_items, inv_items):
         # Print the exit name and where it leads to
         print_exit(direction, exit_leads_to(exits, direction))
 
-    #
-    # COMPLETE ME!
-    #
+    for item in room_items:
+        print("TAKE " + item["id"].upper() + " to take " + item["name"])
+    for item in inv_items:
+        print("DROP " + item["id"].upper() + " to drop " + item["name"])
     
     print("What do you want to do?")
 
@@ -228,7 +226,8 @@ def execute_go(direction):
     (and prints the name of the room into which the player is
     moving). Otherwise, it prints "You cannot go there."
     """
-    pass
+    global current_room
+    current_room = move(current_room["exits"], direction)
 
 
 def execute_take(item_id):
@@ -237,7 +236,16 @@ def execute_take(item_id):
     there is no such item in the room, this function prints
     "You cannot take that."
     """
-    pass
+    item_exists = False
+
+    for item in current_room["items"]:
+        if item_id == item["id"]:
+            item_exists = True
+            current_room["items"].remove(item)
+            inventory.append(item)
+            print(item["name"] + " added to inventory.")
+    if not item_exists:
+        print("You cannot take that.")
     
 
 def execute_drop(item_id):
@@ -245,7 +253,16 @@ def execute_drop(item_id):
     player's inventory to list of items in the current room. However, if there is
     no such item in the inventory, this function prints "You cannot drop that."
     """
-    pass
+    item_exists = False
+
+    for item in inventory:
+        if item_id == item["id"]:
+            item_exists = True
+            inventory.remove(item)
+            current_room["items"].append(item)
+            print(item["name"] + " removed from inventory.")
+    if not item_exists:
+        print("You cannot drop that.")
     
 
 def execute_command(command):
@@ -256,29 +273,32 @@ def execute_command(command):
 
     """
 
-    if 0 == len(command):
-        return
+    if len(command) != 0:
+        if command[0] == "go":
+            if len(command) > 1:
+                if command[1] in current_room["exits"]:
+                    execute_go(command[1])
+                else:
+                    print("You cannot go there.")
+            else:
+                print("Go where?")
+    
+        elif command[0] == "take":
+            if len(command) > 1:
+                execute_take(command[1])
+            else:
+                print("Take what?")
+    
+        elif command[0] == "drop":
+            if len(command) > 1:
+                execute_drop(command[1])
+            else:
+                print("Drop what?")
 
-    if command[0] == "go":
-        if len(command) > 1:
-            execute_go(command[1])
         else:
-            print("Go where?")
-
-    elif command[0] == "take":
-        if len(command) > 1:
-            execute_take(command[1])
-        else:
-            print("Take what?")
-
-    elif command[0] == "drop":
-        if len(command) > 1:
-            execute_drop(command[1])
-        else:
-            print("Drop what?")
-
+            print("This makes no sense.")
     else:
-        print("This makes no sense.")
+        print("Please enter a command.")
 
 
 def menu(exits, room_items, inv_items):
@@ -330,6 +350,11 @@ def main():
 
         # Show the menu with possible actions and ask the player
         command = menu(current_room["exits"], current_room["items"], inventory)
+        if len(command) != 0:
+            if command[0] == "quit":
+                print("You have quit the game.")
+                break
+
 
         # Execute the player's command
         execute_command(command)
